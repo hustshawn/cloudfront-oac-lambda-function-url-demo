@@ -2,6 +2,13 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: |
   Sample SAM Template for cf-oac-demo #magic___^_^___line
+
+Mappings:
+  Constants:
+    ManagedPolicyIds:
+      CachingDisabled: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+      AllViewer: 216adef6-5c7f-47e4-b989-5492eafa07d3
+
 Resources:
   StreamingFunction:
     Type: AWS::Serverless::Function
@@ -10,7 +17,7 @@ Resources:
       Handler: index.handler
       Runtime: nodejs18.x
       Architectures:
-        - x86_64
+      - x86_64
       Timeout: 10
       FunctionUrlConfig:
         AuthType: AWS_IAM
@@ -23,11 +30,11 @@ Resources:
       FunctionUrlAuthType: AWS_IAM
       Principal: cloudfront.amazonaws.com
       SourceArn: !Join
-        - ''
-        - - 'arn:aws:cloudfront::'
-          - !Ref AWS::AccountId
-          - ':distribution/'
-          - !Ref CloudfrontDistribution
+      - ''
+      - - 'arn:aws:cloudfront::'
+        - !Ref AWS::AccountId
+        - ':distribution/'
+        - !Ref CloudfrontDistribution
   CloudFrontOAC:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
@@ -37,27 +44,6 @@ Resources:
         OriginAccessControlOriginType: lambda
         SigningBehavior: always
         SigningProtocol: sigv4
-  CachePolicy:
-    Type: AWS::CloudFront::CachePolicy
-    Properties:
-      CachePolicyConfig:
-        Name: !Ref AWS::StackName
-        DefaultTTL: 10800
-        MinTTL: 10800
-        MaxTTL: 10800
-        ParametersInCacheKeyAndForwardedToOrigin:
-          CookiesConfig:
-            CookieBehavior: none
-          EnableAcceptEncodingGzip: false
-          EnableAcceptEncodingBrotli: false
-          HeadersConfig:
-            HeaderBehavior: whitelist
-            Headers:
-              - x-forwarded-for
-          QueryStringsConfig:
-            QueryStringBehavior: whitelist
-            QueryStrings:
-              - allowed_query_string_param
   CloudfrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -66,30 +52,31 @@ Resources:
         IPV6Enabled: true
         HttpVersion: http2
         Origins:
-          - Id: MyOrigin
-            OriginAccessControlId: !Ref CloudFrontOAC
-            DomainName: !Select
-              - 2
-              - !Split
-                - /
-                - !GetAtt StreamingFunctionUrl.FunctionUrl
-            CustomOriginConfig:
-              HTTPSPort: 443
-              OriginProtocolPolicy: https-only
-              OriginSSLProtocols:
-                - TLSv1.2
+        - Id: MyOrigin
+          OriginAccessControlId: !Ref CloudFrontOAC
+          DomainName: !Select
+          - 2
+          - !Split
+            - /
+            - !GetAtt StreamingFunctionUrl.FunctionUrl
+          CustomOriginConfig:
+            HTTPSPort: 443
+            OriginProtocolPolicy: https-only
+            OriginSSLProtocols:
+            - TLSv1.2
         Enabled: true
         DefaultCacheBehavior:
           AllowedMethods:
-            - GET
-            - HEAD
+          - GET
+          - HEAD
           CachedMethods:
-            - GET
-            - HEAD
+          - GET
+          - HEAD
           Compress: true
           TargetOriginId: MyOrigin
           ViewerProtocolPolicy: redirect-to-https
-          CachePolicyId: !Ref CachePolicy
+          CachePolicyId: !FindInMap [Constants, ManagedPolicyIds, CachingDisabled]
+
 Outputs:
   StreamingFunction:
     Description: Streaming Lambda Function ARN
@@ -110,8 +97,8 @@ Outputs:
     Export:
       Name: DistributionArn
     Value: !Join
-      - ''
-      - - 'arn:aws:cloudfront::'
-        - !Ref AWS::AccountId
-        - ':distribution/'
-        - !Ref CloudfrontDistribution
+    - ''
+    - - 'arn:aws:cloudfront::'
+      - !Ref AWS::AccountId
+      - ':distribution/'
+      - !Ref CloudfrontDistribution
