@@ -6,11 +6,16 @@ app = FastAPI()
 
 
 async def streamer():
-    for i in range(10):
-        await asyncio.sleep(1)
-        yield b"This is streaming from Lambda. Updated  \n"
+    for i in range(20):
+        await asyncio.sleep(1.5)
+        yield f"<h2>This is streaming from Lambda!</h2>"
 
 
 @app.get("/")
 async def index():
-    return StreamingResponse(streamer(), media_type="text/plain; charset=utf-8")
+    return StreamingResponse(
+        streamer(),
+        headers={
+            "Content-Type": "text/html",
+        },
+    )

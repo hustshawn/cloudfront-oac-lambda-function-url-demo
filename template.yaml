@@ -55,27 +55,6 @@ Resources:
         OriginAccessControlOriginType: lambda
         SigningBehavior: always
         SigningProtocol: sigv4
-  # CachePolicy:
-  #   Type: AWS::CloudFront::CachePolicy
-  #   Properties:
-  #     CachePolicyConfig:
-  #       Name: !Ref AWS::StackName
-  #       DefaultTTL: 0
-  #       MinTTL: 0
-  #       MaxTTL: 0
-  #       ParametersInCacheKeyAndForwardedToOrigin:
-  #         CookiesConfig:
-  #           CookieBehavior: none
-  #         EnableAcceptEncodingGzip: false
-  #         EnableAcceptEncodingBrotli: false
-  #         HeadersConfig:
-  #           HeaderBehavior: whitelist
-  #           Headers:
-  #           - x-forwarded-for
-  #         QueryStringsConfig:
-  #           QueryStringBehavior: whitelist
-  #           QueryStrings:
-  #           - allowed_query_string_param
   CloudfrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -107,7 +86,6 @@ Resources:
           Compress: true
           TargetOriginId: MyOrigin
           ViewerProtocolPolicy: redirect-to-https
-          # CachePolicyId: !Ref CachePolicy
           CachePolicyId: !FindInMap [Constants, ManagedPolicyIds, CachingDisabled]
 
 Outputs:
